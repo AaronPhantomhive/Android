@@ -1,12 +1,11 @@
 compileSdkVersion, minSdkVersion 和 targetSdkVersion都是什么
-
 https://blog.csdn.net/gaolh89/article/details/79809034
+官方文档：(搜索version)
+https://developer.android.com/studio/build
 
-官方文档：https://developer.android.com/studio/build
-搜索version
-
+Activity reference
+https://developer.android.com/reference/android/app/Activity
 
 官方API更新日志
-
 https://developer.android.com/sdk/api_diff/30/changes
 
