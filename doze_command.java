@@ -22,3 +22,20 @@ AlarmManager alarmManager = (AlarmManager) mainService.getSystemService(Context.
 			
 			Log.i(AndroidConst.LOG_TAG, "Alarm Manager Starts");
 		}
+
+
+
+/**
+
+
+AlarmManager.RTC_WAKEUP，硬件闹钟，当闹钟发躰时唤醒手机休眠；
+
+AlarmManager.ELAPSED_REALTIME，真实时间流逝闹钟，不唤醒手机休眠；当手机休眠时不发射闹钟。
+
+AlarmManager.ELAPSED_REALTIME_WAKEUP，真实时间流逝闹钟，当闹钟发躰时唤醒手机休眠；
+
+ 
+
+RTC闹钟和ELAPSED_REALTIME最大的差别就是前者可以通过修改手机时间触发闹钟事件，后者要通过真实时间的流逝，即使在休眠状态，时间也会被计算。
+
+*/
