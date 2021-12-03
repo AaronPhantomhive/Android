@@ -1,0 +1,83 @@
+testUrl
+https://www.4clue.com/motionboard/
+
+system
+
+test
+wad_test
+
+
+
+platform-tools
+
+
+adb devices # 查看当前连接的设备
+adb connect 127.0.0.1:5554 # 连接到android模拟器
+adb -s emulator-5554 shell # 进入到指定模拟器 执行shell(发现还真是多个设备，需要为ADB命令指定设备的序列号)
+adb -s emulator-5556 shell
+
+
+运行以下命令，强制系统进入闲置模式：
+    $ adb shell dumpsys deviceidle force-idle
+    
+准备就绪后，运行以下命令，使系统退出闲置模式：
+    $ adb shell dumpsys deviceidle unforce
+    
+执行以下命令，重新激活设备：
+    $ adb shell dumpsys battery reset
+
+
+
+adb shell dumpsys deviceidle step
+dumpsys deviceidle get light
+dumpsys deviceidle get deep
+
+未充电
+dumpsys battery unplug
+
+
+getprop ro.build.version.sdk 
+
+
+
+
+#Doze开启
+adb shell dumpsys deviceidle enable
+#Doze关闭
+adb shell dumpsys deviceidle disable
+
+#控制台会返回信息下面信息
+#Deep idle mode enabled
+#Light idle mode enable
+
+#进入Doze模式
+adb shell dumpsys deviceidle force-idle
+#如果开启了Deep/Light idle
+#控制台会返回信息下面信息
+#Now forced in to deep idle mode
+#否则返回信息如下
+#Unable to go deep idle; not enabled
+
+#退出Doze模式
+adb shell dumpsys deviceidle unforce
+#控制台会返回信息下面信息
+#Light state: ACTIVE, deep state: ACTIVE
+
+
+
+打盹白名单和deviceidle.xml
+
+$ adb shell dumpsys deviceidle
+
+$ adb shell cat /data/system/deviceidle.xml
+
+
+
+
+反编译
+
+apktool.bat d -f  Doze Buster_v3.1_apkpure.com.apk  test
+
+dex2jar.bat classes.dex
+
+d2j-dex2jar.bat classes.dex
