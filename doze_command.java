@@ -24,23 +24,49 @@ D:\Android\SDK\platform-tools
 	
 	
 	
-	// whiteList
+	// whiteList version 1
 	@SuppressLint("BatteryLife")
-	public void turnOffDozeMode(Context context){  //you can use with or without passing context
-		if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) { // version <= 30
-			Intent intent = new Intent();
-			String packageName = context.getPackageName();
-			PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-			if (pm.isIgnoringBatteryOptimizations(packageName)) // if you want to disable doze mode for this package
-				intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-			else { // if you want to enable doze mode
-				intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-				intent.setData(Uri.parse("package:" + packageName));
-			}
-			context.startActivity(intent);
+	public void whiteList(Context context){
+		Intent intent = new Intent();
+		String packageName = context.getPackageName();
+		PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+		if (pm.isIgnoringBatteryOptimizations(packageName)) // if you want to disable doze mode for this package
+			intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+		else { // if you want to enable doze mode
+			intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+			intent.setData(Uri.parse("package:" + packageName));
 		}
+		context.startActivity(intent);
+	}
+	
+	
+// whiteList version 2 (success)
+	private boolean isWhiteList() {
+		boolean inWhiteList = false;
+		PowerManager powerManager = (PowerManager) mainService.getSystemService(Context.POWER_SERVICE);
+		if (powerManager != null) {
+			inWhiteList = powerManager.isIgnoringBatteryOptimizations(mainActivity.getPackageName());
+		}
+		return inWhiteList;
 	}
 
+	@SuppressLint("BatteryLife")
+	public void requestIgnoreBatteryOptimizations(Context context) {
+		Intent intent = new Intent();
+		PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+		// not in whiteList
+		if (!powerManager.isIgnoringBatteryOptimizations(context.getPackageName())) {
+			intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+			intent.setData(Uri.parse("package:" + context.getPackageName()));
+			Log.d(AndroidConst.LOG_TAG, "2222222222222222222222222222222222");
+		}
+		context.startActivity(intent);
+	}
+
+
+	if(!isWhiteList()) {
+		requestIgnoreBatteryOptimizations(mainActivity);
+	}
 
 
 
@@ -102,12 +128,45 @@ D:\Android\SDK\platform-tools
 		PowerManager.WakeLock wakeLock = powerManager.newWakeLock(
 				PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_DIM_WAKE_LOCK, "MBWakeLock");
 		wakeLock.acquire();
+		
 		// screen on 2
+		mainActivity.setTurnScreenOn(true);
+                            	mainActivity.setShowWhenLocked(true);
+                            	KeyguardManager keyguardManager = (KeyguardManager) mainActivity.getSystemService(Context.KEYGUARD_SERVICE);
+                            	keyguardManager.requestDismissKeyguard(mainActivity, null);
+		
+		// screen on 3
 		mainActivity.getWindow().addFlags(
 				WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
 						WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
 						WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
 						WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON);
+						
+		// screen on 4 (success)keyguardManager.requestDismissKeyguard && PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_DIM_WAKE_LOCK  实现5分钟亮屏
+		PowerManager powerManager = (PowerManager) mainService.getSystemService(Context.POWER_SERVICE);
+		@SuppressLint("InvalidWakeLockTag")
+		PowerManager.WakeLock wakeLock = powerManager.newWakeLock(
+				PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_DIM_WAKE_LOCK, "MBWakeLock");
+		wakeLock.acquire(TimeUnit.SECONDS.toMillis(5));
+	
+		mainActivity.setTurnScreenOn(true);
+		mainActivity.setShowWhenLocked(true);
+		KeyguardManager keyguardManager = (KeyguardManager) mainActivity.getSystemService(Context.KEYGUARD_SERVICE);
+		keyguardManager.requestDismissKeyguard(mainActivity, null);
+//								KeyguardManager.KeyguardLock keyguardLock = keyguardManager.newKeyguardLock("unLock");
+//								keyguardLock.disableKeyguard();
+//
+//							Handler handler = new Handler(Looper.getMainLooper());
+//							handler.post(() -> mainActivity.getWindow().addFlags(
+//									WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+//									WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
+//									WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
+//									WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON |
+//									WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD)
+//							);
+		wakeLock.release();
+		
+		
 
 		// screen off
 		// 方法1 需要权限 x
@@ -167,15 +226,7 @@ AlarmManager.ELAPSED_REALTIME_WAKEUP，真实时间流逝闹钟，表示闹钟�
 
 */
 
-		
-		
-		
-		
-		
-		
-		
-		
-		
+
 
 	private void setAlarm() {
 		// 時間をセットする
@@ -199,25 +250,46 @@ AlarmManager.ELAPSED_REALTIME_WAKEUP，真实时间流逝闹钟，表示闹钟�
 		((AlarmManager)mainService.getSystemService(Context.ALARM_SERVICE)).setAlarmClock(clockInfo, pendingIntent);
 //		((AlarmManager) mainService.getSystemService(Context.ALARM_SERVICE)).setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(), 5000, pendingIntent);
 	}
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+
+
+// sensor
+
+case Sensor.TYPE_PROXIMITY:
+	PowerManager mPowerManager = (PowerManager) mainActivity.getSystemService(Context.POWER_SERVICE);
+	@SuppressLint("InvalidWakeLockTag")
+	PowerManager.WakeLock mWakeLock = mPowerManager.newWakeLock(
+			PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK, "MBWakeSensor");
+	if (event.values[0] == 0.0) {
+		// screen off
+		if (!mWakeLock.isHeld())
+			mWakeLock.acquire(TimeUnit.SECONDS.toMillis(5));
+	} else {
+		// screen on
+		if (mWakeLock.isHeld())
+			mWakeLock.release();
+	}
+	break;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 package com.fourclue.android.iot.component;
 
 import android.content.Context;
@@ -225,162 +297,11 @@ import android.content.Context;
 public class MessageNotification {
 }
 
-		
-		
-		
-		
-		
-		
-		
-		
-		
-public class messageservice extends service {
 
 
 
-  //获取消息线程 
 
-  private messagethread messagethread = null; 
 
-
-
-  //点击查看 
-
-  private intent messageintent = null; 
-
-  private pendingintent messagependingintent = null; 
-
-
-
-  //通知栏消息 
-
-  private int messagenotificationid = 1000; 
-
-  private notification messagenotification = null; 
-
-  private notificationmanager messagenotificatiomanager = null; 
-
-
-
-  public ibinder onbind(intent intent) { 
-
-      return null; 
-
-  } 
-
-
-
-  @override
-
-  public int onstartcommand(intent intent, int flags, int startid) {
-
-      //初始化 
-
-      messagenotification = new notification(); 
-
-      messagenotification.icon = r.drawable.icon; 
-
-      messagenotification.tickertext = "新消息"; 
-
-      messagenotification.defaults = notification.default_sound; 
-
-      messagenotificatiomanager = (notificationmanager)getsystemservice(context.notification_service); 
-
-
-
-      messageintent = new intent(this, messageactivity.class); 
-
-      messagependingintent = pendingintent.getactivity(this,0,messageintent,0); 
-
-
-
-      //开启线程 
-
-      messagethread = new messagethread(); 
-
-      messagethread.isrunning = true; 
-
-      messagethread.start(); 
-
-
-
-      return super.onstartcommand(intent, flags, startid);  
-
-  } 
-
-    
-
-  /** 
-
-   * 从服务器端获取消息 
-
-   * 
-
-   */
-
-  class messagethread extends thread{
-
-      //运行状态，www.3ppt.com下一步骤有大用 
-
-      public boolean isrunning = true; 
-
-      public void run() { 
-
-          while(isrunning){ 
-
-              try { 
-
-                  //休息10分钟 
-
-                  thread.sleep(600000); 
-
-                  //获取服务器消息 
-
-                  string servermessage = getservermessage(); 
-
-                  if(servermessage!=null&&!"".equals(servermessage)){ 
-
-                      //更新通知栏 
-
-                      messagenotification.setlatesteventinfo(messageservice.this,"新消息","1111111111111111111111"+servermessage,messagependingintent); 
-
-                      messagenotificatiomanager.notify(messagenotificationid, messagenotification); 
-
-                      //每次通知完，通知id递增一下，避免消息覆盖掉 
-
-                      messagenotificationid++; 
-
-                  } 
-
-              } catch (interruptedexception e) { 
-
-                  e.printstacktrace(); 
-
-              } 
-
-          } 
-
-      } 
-
-  } 
-
-
-
-  /** 
-
-   * 这里以此方法为服务器demo，仅作示例 
-
-   * @return 返回服务器要推送的消息，否则如果为空的话，不推送 
-
-   */
-
-  public string getservermessage(){ 
-
-      return "yes!"; 
-
-  } 
-
-}
 
 
 
